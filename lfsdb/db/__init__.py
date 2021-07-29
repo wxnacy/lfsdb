@@ -6,7 +6,11 @@
 """
 
 from .errors import FileStorageError
+from .models import FSColumn
+from .models import FSModel
 
 __all__ = [
     'FileStorageError',
-        ]
+    'FSColumn',
+    'FSModel',
+]
