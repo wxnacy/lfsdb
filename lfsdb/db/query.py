@@ -5,6 +5,8 @@
 query
 """
 from .errors import FSQueryError
+from .enum import QueryOperator
+from functools import singledispatch
 
 class FSQuery(object):
     _query = {}
@@ -18,10 +20,13 @@ class FSQuery(object):
         if not data:
             return False
         for k, v in self._query.items():
-            value = data.get("k")
-            if isinstance(v, str):
-                if value != v:
-                    return False
+            value = data.get(k)
+            if not _exists(v, value):
+                return False
+            print(k, v, value)
+            #  if isinstance(v, str):
+                #  if value != v:
+                    #  return False
             if isinstance(v, dict):
                 for sk, sv in v.items():
                     if sk == "$in":
@@ -32,3 +37,20 @@ class FSQuery(object):
                             return False
         return True
 
+
+@singledispatch
+def _exists(query_value, value):
+    return True
+
+@_exists.register(str)
+def _(str_value, value):
+    print('str')
+    return str_value == value
+
+@_exists.register(str)
+def _(str_value, value):
+    print('str')
+    return str_value == value
+
+if __name__ == "__main__":
+    _exists('value', '')
