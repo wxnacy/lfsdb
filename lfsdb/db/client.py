@@ -11,6 +11,7 @@ import shutil
 import uuid
 from datetime import datetime
 from wpy.files import FileUtils
+from wpy.files import ZipUtils
 from .errors import FileStorageError
 from .errors import FSQueryError
 from .query import FSQuery
@@ -20,8 +21,11 @@ class FileStorage(object):
         if not root:
             root = os.path.expanduser('~/.lfsdb/data')
         self.root = root
+        self.dump_root = os.path.expanduser('~/.lfsdb/dump')
         if not os.path.exists(self.root):
             os.makedirs(self.root)
+        if not os.path.exists(self.dump_root):
+            os.makedirs(self.dump_root)
 
     def list_db_names(self):
         if not os.path.exists(self.root):
@@ -46,12 +50,43 @@ class FileDB(FileStorage):
             os.makedirs(root)
 
     def list_table_names(self):
+        """列出表名列表"""
         if not os.path.exists(self.db_root):
             return []
         return os.listdir(self.db_root)
 
     def get_table(self, table):
         return FileTable(self.root, self.db, table)
+
+    def dump(self, dump_root=None):
+        if not dump_root:
+            dump_root = self.dump_root
+        dump_root = os.path.expanduser(dump_root)
+        path = os.path.join(dump_root, 'lfsdb_{}_{}_dump'.format(self.db,
+            datetime.now().strftime("%Y%m%d%H%M%S")))
+        print('备份地址:', path)
+        ZipUtils.zip(self.db_root, path)
+
+    def store(self, dump_path=None):
+        """恢复备份"""
+        print('恢复备份会覆盖当前数据')
+        if not dump_path:
+            names = os.listdir(self.dump_root)
+            names = [o for o in names if 'lfsdb_{}'.format(self.db) in o]
+            names.sort(key = lambda x: x, reverse=True)
+            if names:
+                dump_path = names[0]
+        if not dump_path:
+            print('当前无备份')
+            return
+        if dump_path.startswith('lfsdb_'):
+            dump_path = os.path.join(self.dump_root, dump_path)
+        if not os.path.exists(dump_path):
+            print('备份文件不存在:', dump_path)
+            return
+        print('使用备份文件:', dump_path)
+
+        ZipUtils.unzip(dump_path, self.root)
 
 class FileTable(FileDB):
     def __init__(self, root, db, table):
