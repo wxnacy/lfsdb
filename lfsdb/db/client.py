@@ -59,6 +59,10 @@ class FileDB(FileStorage):
         return FileTable(self.root, self.db, table)
 
     def dump(self, dump_root=None):
+        """
+        备份数据库
+        :param str dump_root: 备份目录，空值，则使用默认目录
+        """
         if not dump_root:
             dump_root = self.dump_root
         dump_root = os.path.expanduser(dump_root)
@@ -68,14 +72,22 @@ class FileDB(FileStorage):
         ZipUtils.zip(self.db_root, path)
 
     def store(self, dump_path=None):
-        """恢复备份"""
+        """恢复备份
+        :param str dump_path: 备份文件地址
+                                1、绝对路径
+                                2、文件名称
+                                3、空（使用最新备份）
+                                4、目录（使用目录下最新备份）
+        """
         print('恢复备份会覆盖当前数据')
         if not dump_path:
-            names = os.listdir(self.dump_root)
-            names = [o for o in names if 'lfsdb_{}'.format(self.db) in o]
-            names.sort(key = lambda x: x, reverse=True)
-            if names:
-                dump_path = names[0]
+            dump_path = self._get_last_dump_name(self.dump_root)
+        if os.path.isdir(dump_path):
+            dump_name = self._get_last_dump_name(dump_path)
+            if not dump_name:
+                print('当前无备份')
+                return
+            dump_path = os.path.join(dump_path, dump_name)
         if not dump_path:
             print('当前无备份')
             return
@@ -87,6 +99,13 @@ class FileDB(FileStorage):
         print('使用备份文件:', dump_path)
 
         ZipUtils.unzip(dump_path, self.root)
+
+    def _get_last_dump_name(self, dump_root):
+        """获取最后一个备份名"""
+        names = os.listdir(dump_root)
+        names = [o for o in names if 'lfsdb_{}'.format(self.db) in o]
+        names.sort(key = lambda x: x, reverse=True)
+        return names[0] if names else None
 
 class FileTable(FileDB):
     def __init__(self, root, db, table):
