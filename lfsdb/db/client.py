@@ -12,6 +12,7 @@ import uuid
 from datetime import datetime
 from wpy.files import FileUtils
 from .errors import FileStorageError
+from .errors import FSQueryError
 from .query import FSQuery
 
 class FileStorage(object):
@@ -84,9 +85,19 @@ class FileTable(FileDB):
             return self._read_by_id(_id)
         return None
 
-    def find(self, query=None, **kwargs):
+    def find(self, query=None, projection=None, **kwargs):
         if not query:
             query = {}
+        if not projection:
+            projection = {}
+        projection_id_type = projection.pop('_id', None)
+        projection_values = set(projection.values())
+        projection_type = list(projection_values)[0] if len(
+                projection_values) > 0 else None
+        if len(projection_values) > 1:
+            raise FSQueryError(('Projection cannot have a mix of inclusion'
+                ' and exclusion.'))
+
         if '_id' in query:
             item = self.find_one_by_id(query['_id'])
             return [item] if item else []
@@ -96,13 +107,18 @@ class FileTable(FileDB):
         for _id in ids:
             doc = self._read_by_id(_id)
             if fsquery.exists(doc):
+                doc = self._get_projection_doc(doc, projection, projection_type)
+                if projection_id_type == 1:
+                    doc['_id'] = _id
+                elif projection_type == 0:
+                    doc.pop('_id', None)
                 res.append(doc)
 
         res.sort(key = lambda x: x.get("_create_time", ''))
         return res
 
-    def find_one(self, query, **kwargs):
-        docs = self.find(query, **kwargs)
+    def find_one(self, query=None, projection=None, **kwargs):
+        docs = self.find(query, projection, **kwargs)
         return docs[0] if docs else None
 
     def count(self, query):
@@ -134,6 +150,20 @@ class FileTable(FileDB):
         if os.path.exists(self.table_root):
             #  os.removedirs(self.table_root)
             shutil.rmtree(self.table_root)
+
+    def _get_projection_doc(self, doc, projection, projection_type):
+        if not projection:
+            return doc
+
+        if projection_type == 0:
+            for k, v in projection.items():
+                doc.pop(k)
+            return doc
+        res = {"_id": doc.get("_id")}
+        for k, v in projection.items():
+            if v == 1 and k in doc:
+                res[k] = doc[k]
+        return res
 
     def _delete_by_id(self, _id):
         if self._exists_id(_id):

@@ -73,8 +73,6 @@ class FSModel(object):
 
     @classmethod
     def find(cls, query=None, db_col=None):
-        if not query:
-            query = {}
         if not db_col:
             db_col = {}
         items = cls.db_col(**db_col).find(query)

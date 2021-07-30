@@ -21,7 +21,6 @@ class FSQuery(object):
             return False
         for k, v in self._query.items():
             value = doc.get(k)
-            print(k, v, value)
             if not _exists(v, value):
                 return False
         return True

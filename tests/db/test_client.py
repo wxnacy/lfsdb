@@ -10,6 +10,7 @@ import os
 
 from lfsdb import FileStorage
 from lfsdb.db import FileStorageError
+from lfsdb.db.errors import FSQueryError
 from wpy.files import FileUtils
 from wpy.tools import randoms
 
@@ -63,6 +64,20 @@ def test_find():
 
     docs = db.find({ "name": name, "age": 12 })
     assert len(docs) == 1
+
+    doc = db.find_one({"age": 12}, {})
+    assert len(doc.keys()) == 5
+
+    doc = db.find_one({"age": 12}, {"name": 1})
+    assert len(doc.keys()) == 2
+
+    with pytest.raises(FSQueryError) as exe_info:
+        doc = db.find_one({"age": 12}, {"name": 1, "age": 0})
+        assert str(exe_info) == ('Projection cannot have a mix of inclusion'
+                ' and exclusion.')
+
+    doc = db.find_one({"age": 12}, {"name": 1, "_id": 0})
+    assert len(doc.keys()) == 2
 
     db.drop()
 
