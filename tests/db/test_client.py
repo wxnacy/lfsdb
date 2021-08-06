@@ -108,3 +108,17 @@ def test_delete():
     assert count == 3
 
     db.drop()
+
+def test_sort():
+
+    arr = [{"age": 5, "id": 2}, {"age": 5, "id": 5}, {"age": 3, "id": 4}]
+    for a in arr:
+        db.insert(a)
+    items = db.find(sorter = [('age', 1), ('id', -1)])
+    for item in items:
+        item.pop('_id', None)
+        item.pop('_create_time', None)
+        item.pop('_update_time', None)
+    assert items == [{"age": 3, "id": 4},{"age": 5, "id": 5}, {"age": 5, "id": 2}]
+
+    db.drop()

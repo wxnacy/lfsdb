@@ -5,13 +5,13 @@
 文件存储
 """
 
-
 import os
 import shutil
 import uuid
 from datetime import datetime
 from wpy.files import FileUtils
 from wpy.files import ZipUtils
+from wpy.tools import sorted_plus
 from .errors import FileStorageError
 from .errors import FSQueryError
 from .query import FSQuery
@@ -140,6 +140,17 @@ class FileTable(FileDB):
         return None
 
     def find(self, query=None, projection=None, **kwargs):
+        """
+        查询列表
+
+        :param dict query: 查询条件
+            {"name": "wxnacy", "_create_time": { "$gt": "2021-08-06" }}
+        :param dict projection: 需要返回的字段
+            {"_id": 0}
+        :param kwargs:
+            `sort`: [('age', 1), ('_create_time', -1)]
+                使用 `age` 正序排列，`_create_time` 倒序排列
+        """
         if not query:
             query = {}
         if not projection:
@@ -168,7 +179,8 @@ class FileTable(FileDB):
                     doc.pop('_id', None)
                 res.append(doc)
 
-        res.sort(key = lambda x: x.get("_create_time", ''))
+        sorter = kwargs.get('sorter', [('_create_time', 1)])
+        sorted_plus(res, sorter = sorter)
         return res
 
     def find_one(self, query=None, projection=None, **kwargs):

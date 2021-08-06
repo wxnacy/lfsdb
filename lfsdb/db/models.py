@@ -65,6 +65,13 @@ class FSModel(object):
         return fs.get_db(cls.db).get_table(table)
 
     @classmethod
+    def insert(cls, data):
+        """插入数据"""
+        item = cls(**data)
+        item.save()
+        return item
+
+    @classmethod
     def find_one_by_id(cls, _id, db_col=None):
         if not db_col:
             db_col = {}
@@ -72,13 +79,15 @@ class FSModel(object):
         return cls(**item) if item else None
 
     @classmethod
-    def find(cls, query=None, db_col=None):
+    def find(cls, query=None, db_col=None, **kwargs):
+        """查找列表"""
         if not db_col:
             db_col = {}
-        items = cls.db_col(**db_col).find(query)
+        items = cls.db_col(**db_col).find(query, **kwargs)
         return [cls(**item) for item in items]
 
     def save(self):
+        """保存"""
         data = self.__default_dict__()
         data.update(self.__dict__)
         db = self.db_col(**self.__dict__)
