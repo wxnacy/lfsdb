@@ -88,3 +88,6 @@ class FSModel(object):
             db.update({ "_id": self._id }, data)
         else:
             db.insert(data)
+
+    def to_dict(self):
+        return dict(self.__dict__)
