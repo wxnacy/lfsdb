@@ -115,6 +115,7 @@ setup(
     entry_points={
         'console_scripts': [
             'lfs=lfsdb.cli.lfs:main',
+            'lfsdu=lfsdb.cli.lfsdu:main',
         ],
     },
     install_requires=REQUIRED,
