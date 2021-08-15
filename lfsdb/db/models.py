@@ -86,6 +86,10 @@ class FSModel(object):
         items = cls.db_col(**db_col).find(query, **kwargs)
         return [cls(**item) for item in items]
 
+    def delete(self):
+        """删除"""
+        return self.db_col(**self.__dict__).delete({ "_id": self._id })
+
     def save(self):
         """保存"""
         data = self.__default_dict__()

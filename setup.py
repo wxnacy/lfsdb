@@ -114,7 +114,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            #  'dladd=dler.cli.taskadd:main',
+            'lfs=lfsdb.cli.lfs:main',
         ],
     },
     install_requires=REQUIRED,
