@@ -43,14 +43,27 @@ def _(dict_value, value):
         v = dict_value.get(QueryOperator.IN.value)
         if not isinstance(v, list):
             raise FSQueryError('after query $in value must be list')
-        if value not in v:
+        if isinstance(value, list):
+            # 如果字段为列表，那其中有指定数据则返回 True
+            for sv in value:
+                if sv in v:
+                    return True
             return False
+        else:
+            if value not in v:
+                return False
+    # 不包含
     if QueryOperator.NIN.value in dict_value:
         v = dict_value.get(QueryOperator.NIN.value)
         if not isinstance(v, list):
             raise FSQueryError('after query $nin value must be list')
-        if value in v:
-            return False
+        if isinstance(value, list):
+            for sv in value:
+                if sv in v:
+                    return False
+        else:
+            if value in v:
+                return False
     if QueryOperator.GT.value in dict_value:
         v = dict_value.get(QueryOperator.GT.value)
         if value <= v:

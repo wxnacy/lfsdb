@@ -24,8 +24,17 @@ def test_exists():
     data = { "status": "success" }
     assert FSQuery(query).exists(data)
 
+    # 适配字段是列表的情况
+    query = { "status": { "$in": ['success'] } }
+    data = { "status": ["success"] }
+    assert FSQuery(query).exists(data)
+
     query = { "status": { "$in": ['success'] } }
     data = { "status": "failed" }
+    assert not FSQuery(query).exists(data)
+
+    query = { "status": { "$in": ['success'] } }
+    data = { "status": ["failed"] }
     assert not FSQuery(query).exists(data)
 
     query = { "status": { "$in": 'success' } }
@@ -38,8 +47,18 @@ def test_exists():
     data = { "status": "failed" }
     assert FSQuery(query).exists(data)
 
+    # 适配列表的情况
+    query = { "status": { "$nin": ['success'] } }
+    data = { "status": ["failed"] }
+    assert FSQuery(query).exists(data)
+
     query = { "status": { "$nin": ['success'] } }
     data = { "status": "success" }
+    assert not FSQuery(query).exists(data)
+
+    # 适配列表的情况
+    query = { "status": { "$nin": ['success'] } }
+    data = { "status": ["success"] }
     assert not FSQuery(query).exists(data)
 
     query = { "status": { "$nin": 'success' } }
