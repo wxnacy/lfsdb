@@ -86,6 +86,13 @@ class FSModel(object):
         items = cls.db_col(**db_col).find(query, **kwargs)
         return [cls(**item) for item in items]
 
+    @classmethod
+    def count(cls, query=None, db_col=None):
+        """查找列表"""
+        if not db_col:
+            db_col = {}
+        return cls.db_col(**db_col).count(query)
+
     def delete(self):
         """删除"""
         return self.db_col(**self.__dict__).delete({ "_id": self._id })
