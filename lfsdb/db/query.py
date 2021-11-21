@@ -10,15 +10,24 @@ from functools import singledispatch
 
 class FSQuery(object):
     _query = {}
+    is_empty = False
+
     def __init__(self, query):
         if not query:
             query = {}
         self._query = query
+        # 是否为空
+        self.is_empty = not bool(self._query)
 
     def exists(self, doc):
         """判断是否存在符合的数据"""
         if not doc:
             return False
+
+        # 判断条件为空直接返回 True
+        if self.is_empty:
+            return True
+
         for k, v in self._query.items():
             value = doc.get(k)
             if not _exists(v, value):

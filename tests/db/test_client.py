@@ -59,6 +59,10 @@ def test_find():
     doc['age'] = 12
     db.insert(doc)
 
+    # 条件为空
+    docs = db.find()
+    assert len(docs) == 3
+
     docs = db.find({ "name": name })
     assert len(docs) == 3
 

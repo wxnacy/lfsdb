@@ -69,6 +69,7 @@ class FileDB(FileStorage):
         备份数据库
         :param str dump_root: 备份目录，空值，则使用默认目录
         """
+        # TODO 缺失单侧
         if not dump_root:
             dump_root = self.dump_root
         dump_root = os.path.expanduser(dump_root)
@@ -193,14 +194,18 @@ class FileTable(FileDB):
         fsquery = FSQuery(query)
         for _id in ids:
             doc = self._read_by_id(_id)
+            # 判断 doc 是否符合 query 条件
             if fsquery.exists(doc):
+                # 过滤指定字段
                 doc = self._get_projection_doc(doc, projection, projection_type)
+                # 判断是否返回 _id 字段
                 if projection_id_type == 1:
                     doc['_id'] = _id
                 elif projection_type == 0:
                     doc.pop('_id', None)
                 res.append(doc)
 
+        # 默认使用时间排序
         sorter = kwargs.get('sorter', [('_create_time', 1)])
         sorted_plus(res, sorter = sorter)
         return res
@@ -209,7 +214,10 @@ class FileTable(FileDB):
         docs = self.find(query, projection, **kwargs)
         return docs[0] if docs else None
 
-    def count(self, query):
+    def count(self, query=None):
+        """
+        查询数量
+        """
         return len(self.find(query))
 
     def update(self, query, update_data):
