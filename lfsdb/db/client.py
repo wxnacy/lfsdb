@@ -18,9 +18,13 @@ from .query import FSQuery
 
 class FileStorage(object):
     def __init__(self, root=None):
+        """
+        :param str root: 数据存储根路径
+        """
         if not root:
             root = os.path.expanduser('~/.lfsdb/data')
         self.root = root
+        # 备份根路径
         self.dump_root = os.path.expanduser('~/.lfsdb/dump')
         if not os.path.exists(self.root):
             os.makedirs(self.root)
@@ -28,11 +32,13 @@ class FileStorage(object):
             os.makedirs(self.dump_root)
 
     def list_db_names(self):
+        """列出数据名列表"""
         if not os.path.exists(self.root):
             return []
         return os.listdir(self.root)
 
     def get_db(self, db):
+        """获取数据库"""
         return FileDB(self.root, db)
 
 class FileDB(FileStorage):
@@ -111,6 +117,7 @@ class FileTable(FileDB):
     def __init__(self, root, db, table):
         super().__init__(root, db)
         self.table = table
+        # 表根路径
         self.table_root = os.path.join(os.path.expanduser(root), db, table)
 
     def _create_table_root(self):
@@ -121,6 +128,9 @@ class FileTable(FileDB):
         return str(uuid.uuid4())
 
     def insert(self, doc):
+        """
+        插入文档
+        """
         data = dict(doc)
         self._create_table_root()
         _id = doc.get("_id") or self._generage_id()
@@ -129,8 +139,9 @@ class FileTable(FileDB):
         data['_id'] = _id
         data['_create_time'] = self._now()
         data['_update_time'] = self._now()
-        table_path = os.path.join(self.table_root, _id)
-        FileUtils.write_dict(table_path, data)
+        doc_path = os.path.join(self.table_root, _id)
+        # 写入文件
+        FileUtils.write_dict(doc_path, data)
         return _id
 
     def find_one_by_id(self, _id):
@@ -155,19 +166,30 @@ class FileTable(FileDB):
             query = {}
         if not projection:
             projection = {}
+
+        # 先将 _id 从过滤条件中提取出来
         projection_id_type = projection.pop('_id', None)
+
+        # 判断过滤字段中，是否有 1 和 0 的混用，_id 除外
+        # 例如 { "field1": 1, "field1": 0 } 不允许出现
         projection_values = set(projection.values())
-        projection_type = list(projection_values)[0] if len(
-                projection_values) > 0 else None
         if len(projection_values) > 1:
             raise FSQueryError(('Projection cannot have a mix of inclusion'
                 ' and exclusion.'))
 
+        # 判断过滤字段的条件是 include 还是 exclude
+        projection_type = list(projection_values)[0] if len(
+                projection_values) > 0 else None
+
+        # 如果查询条件中出现 _id，则直接查询该 _id
         if '_id' in query:
             item = self.find_one_by_id(query['_id'])
             return [item] if item else []
+
+        # 列出表内所有 id
         ids = self._list_ids()
         res = []
+        # 构建查询条件模型实例
         fsquery = FSQuery(query)
         for _id in ids:
             doc = self._read_by_id(_id)
@@ -244,6 +266,7 @@ class FileTable(FileDB):
         return True
 
     def _now(self):
+        """获取当前时间"""
         return str(datetime.now())
 
     def _exists_doc(self, query, doc):
@@ -253,15 +276,17 @@ class FileTable(FileDB):
         return True
 
     def _list_ids(self):
+        """列出当前表内的 id 列表"""
         if not os.path.exists(self.table_root):
             return []
         return os.listdir(self.table_root)
 
     def _read_by_id(self, _id):
+        """使用 _id 读取数据"""
         try:
             return FileUtils.read_dict(self._generage_path(_id))
         except Exception as e:
-            return {}
+            return None
 
     def _generage_path(self, _id):
         """根据 _id 构建存储地址"""
