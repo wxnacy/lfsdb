@@ -86,6 +86,7 @@ def test_find():
     db.drop()
 
 def test_update():
+    # TODO 缓存
     name = randoms.random_str(6)
     doc = { "name": name}
     db.insert(doc)
@@ -95,9 +96,10 @@ def test_update():
     count = db.update(doc, {"name": "wxnacy"})
     assert count == 3
 
+    db.update({"_id": _id}, {"name": "wxn"})
     data = db.find_one_by_id(_id)
     data = _origin_data(data)
-    #  assert { "name": "wxnacy" } == data
+    assert { "name": "wxn" } == data
 
     db.drop()
 
@@ -108,8 +110,13 @@ def test_delete():
     _id = db.insert(doc)
     db.insert(doc)
 
+    assert db.delete({ "_id": _id }) == 1
+
+    docs = db.find()
+    assert len(docs) == 2
+
     count = db.delete(doc)
-    assert count == 3
+    assert count == 2
 
     db.drop()
 

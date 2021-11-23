@@ -15,6 +15,7 @@ from wpy.tools import sorted_plus
 from .errors import FileStorageError
 from .errors import FSQueryError
 from .query import FSQuery
+from .cache import FILE_CACHE
 
 class FileStorage(object):
     def __init__(self, root=None):
@@ -120,6 +121,7 @@ class FileTable(FileDB):
         self.table = table
         # 表根路径
         self.table_root = os.path.join(os.path.expanduser(root), db, table)
+        FILE_CACHE.init(db, table)
 
     def _create_table_root(self):
         self._create_root(self.table_root)
@@ -143,10 +145,15 @@ class FileTable(FileDB):
         doc_path = os.path.join(self.table_root, _id)
         # 写入文件
         FileUtils.write_dict(doc_path, data)
+        # 写入缓存
+        FILE_CACHE.set(data)
         return _id
 
     def find_one_by_id(self, _id):
         """通过 _id 查找"""
+        cache = FILE_CACHE.get(_id)
+        if cache:
+            return cache
         if self._exists_id(_id):
             return self._read_by_id(_id)
         return None
@@ -188,12 +195,15 @@ class FileTable(FileDB):
             return [item] if item else []
 
         # 列出表内所有 id
-        ids = self._list_ids()
+        ids = FILE_CACHE.list_ids() or self._list_ids()
         res = []
         # 构建查询条件模型实例
         fsquery = FSQuery(query)
         for _id in ids:
-            doc = self._read_by_id(_id)
+            doc = FILE_CACHE.get(_id)
+            if not doc:
+                doc  = self._read_by_id(_id)
+                FILE_CACHE.set(doc)
             # 判断 doc 是否符合 query 条件
             if fsquery.exists(doc):
                 # 过滤指定字段
@@ -229,6 +239,7 @@ class FileTable(FileDB):
             doc.update(update_data)
             if self._update(doc):
                 count += 1
+                FILE_CACHE.set(doc)
         return count
 
     def delete(self, query):
@@ -238,14 +249,17 @@ class FileTable(FileDB):
         for doc in docs:
             _id = doc.get("_id")
             if self._delete_by_id(_id):
+                FILE_CACHE.remove(_id)
                 count += 1
         return count
 
     def drop(self):
         """删除表"""
         if os.path.exists(self.table_root):
-            #  os.removedirs(self.table_root)
+            # 删除本地表目录
             shutil.rmtree(self.table_root)
+        # 缓存删除表
+        FILE_CACHE.drop()
 
     def _get_projection_doc(self, doc, projection, projection_type):
         if not projection:
