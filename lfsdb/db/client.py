@@ -155,7 +155,9 @@ class FileTable(FileDB):
         if cache:
             return cache
         if self._exists_id(_id):
-            return self._read_by_id(_id)
+            doc = self._read_by_id(_id)
+            FILE_CACHE.set(doc)
+            return doc
         return None
 
     def find(self, query=None, projection=None, **kwargs):
@@ -228,7 +230,8 @@ class FileTable(FileDB):
         """
         查询数量
         """
-        return len(self.find(query))
+        projection = { "_id": 1 }
+        return len(self.find(query, projection=projection))
 
     def update(self, query, update_data):
         if '_id' in update_data:

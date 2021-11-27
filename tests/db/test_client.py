@@ -98,6 +98,7 @@ def test_update():
 
     db.update({"_id": _id}, {"name": "wxn"})
     data = db.find_one_by_id(_id)
+    data = db.find_one_by_id(_id)
     data = _origin_data(data)
     assert { "name": "wxn" } == data
 

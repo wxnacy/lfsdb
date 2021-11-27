@@ -31,6 +31,7 @@ class FileCache(object):
 
     def get(self, _id):
         """通过 id 查找"""
+        return None
         key = self._generage_key()
         return self._table_data[key].get(_id)
 
@@ -44,6 +45,7 @@ class FileCache(object):
         key = self._generage_key()
         data = self._table_data.get(key)
 
+        return []
         return list(data.keys()) if data else []
 
     def drop(self):
