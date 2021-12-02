@@ -2,10 +2,10 @@
 # -*- coding:utf-8 -*-
 # Author: wxnacy@gmail.com
 
-from lfsdb.ws.models import SocketModel
+from lfsdb.sockets.models import PickleModel
 
-def test_socket_model_dumps():
-    sm = SocketModel()
+def test_pickle_model_dumps():
+    sm = PickleModel()
     sm.db = 'test_db'
     sm.table = 'test_table'
     sm.method = 'find'
@@ -14,9 +14,7 @@ def test_socket_model_dumps():
     dump_data = sm.dumps()
     assert type(dump_data) == bytes
 
-    sm2 = SocketModel.loads(dump_data)
-
-    assert isinstance(sm2, SocketModel)
+    sm2 = PickleModel.loads(dump_data)
 
     assert sm.db == sm2.db
     assert sm.table == sm2.table

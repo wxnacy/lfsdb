@@ -10,6 +10,8 @@ import socket
 # 获取本机主机名
 localhost = socket.gethostname()
 
-class WSConstants(object):
+class SocketConstants(object):
     PORT = 60608
     HOST = localhost
+
+    FRAGMENT_SIZE = 1 * 1024 # * 1024

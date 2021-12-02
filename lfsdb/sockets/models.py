@@ -23,7 +23,7 @@ class PickleModel(BaseObject):
         data = pickle.loads(bytes_data)
         return cls(**data)
 
-class SocketModel(PickleModel):
+class SocketRequest(PickleModel):
     _db_dict = {}
     db = None
     table = None
@@ -39,4 +39,9 @@ class SocketModel(PickleModel):
         return self._db_dict
 
     def run(self):
-        pass
+        """运行结果"""
+        data = getattr(self.get_db(), self.method)(**self.params)
+        return SocketResponse(data = data)
+
+class SocketResponse(PickleModel):
+    data = None

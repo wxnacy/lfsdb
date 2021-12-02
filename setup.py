@@ -24,11 +24,6 @@ VERSION = None
 # What packages are required for this module to be executed?
 REQUIRED = [
     'wpy',
-    'flask',
-    'requests',
-    'gevent',
-    'gunicorn',
-    'rich',
 ]
 
 # What packages are optional?

@@ -5,7 +5,7 @@
 服务端
 """
 
-from lfsdb.ws.server import Server
+from lfsdb.sockets.server import Server
 
 
 if __name__ == "__main__":

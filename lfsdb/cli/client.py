@@ -9,13 +9,13 @@ import os
 import socket               # 导入 socket 模块
 import json
 
-from lfsdb.ws.constants import WSConstants
+from lfsdb.sockets.constants import SocketConstants
 
 if __name__ == "__main__":
 
     s = socket.socket()         # 创建 socket 对象
     host = socket.gethostname() # 获取本地主机名
-    port = WSConstants.PORT                # 设置端口号
+    port = SocketConstants.PORT
 
     s.connect((host, port))
 
