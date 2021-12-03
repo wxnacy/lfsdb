@@ -8,10 +8,12 @@
 import socket               # 导入 socket 模块
 import traceback
 
+from lfsdb.common.loggers import get_logger
 from lfsdb.sockets.constants import SocketConstants
 from lfsdb.sockets.models import SocketRequest
 from lfsdb.sockets.models import SocketResponse
 from lfsdb.sockets.exceptions import ServerStopException
+from lfsdb.db.errors import LfsdbError
 
 from threading import Event
 
@@ -25,6 +27,7 @@ signal.signal(signal.SIGINT, handle_sigint)
 
 
 class Server(object):
+    logger = get_logger('SockerServer')
 
     def __init__(self, *args, **kwargs):
         self.socket = socket.socket()
@@ -57,13 +60,12 @@ class Server(object):
         """接收客户端信息"""
         c,addr = self.socket.accept()     # 建立客户端连接
         print('连接地址：', c, addr)
-        #  try:
-        self._accept(c)
-        #  except ServerStopException:
-            #  break
-        #  except:
-            #  print(traceback.format_exc())
-            #  print(traceback.format_stack())
+        try:
+            self._accept(c)
+        except LfsdbError as e:
+            self.logger.error(traceback.format_exc())
+            self.logger.error(traceback.format_stack())
+            c.send(SocketResponse.build_error(e).dumps())
         c.close()                # 关闭连接
 
     def _accept(self, socket):

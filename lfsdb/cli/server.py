@@ -17,11 +17,6 @@ logger = get_logger(__name__)
 def heart():
     while True:
         time.sleep(2)
-        #  logger.info(time.time())
-        #  c = Client()
-        #  c.connect()
-        #  c.heart()
-        #  c.close()
 
 
 def main():
@@ -42,10 +37,13 @@ class Command(object):
 
     def stop(self):
         """停止服务"""
-        c = Client()
-        c.connect()
-        c.stop_server()
-        c.close()
+        try:
+            c = Client()
+            c.connect()
+            c.stop_server()
+            c.close()
+        except:
+            pass
         print('服务停止')
 
     def status(self):
@@ -56,6 +54,11 @@ class Command(object):
         else:
             print('服务状态：已停止')
 
+
+    def restart(self):
+        """重启服务"""
+        self.stop()
+        self.start()
 
     def start(self):
         """运行服务"""

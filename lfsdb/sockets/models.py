@@ -79,6 +79,8 @@ class SocketRequest(PickleModel):
 class SocketResponse(PickleModel):
     code = 0
     data = None
+    e = None
+    error_name = None
 
     def json(self):
         """将数据格式化为 dict 结构"""
@@ -97,7 +99,7 @@ class SocketResponse(PickleModel):
         """构建 unkown 回复"""
         return cls(code = 1, data='unkown message')
 
-
-
-
+    @classmethod
+    def build_error(cls, e):
+        return cls(code = 1, error_name = e.NAME, data = str(e))
 

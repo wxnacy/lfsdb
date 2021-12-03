@@ -24,7 +24,6 @@ VERSION = None
 # What packages are required for this module to be executed?
 REQUIRED = [
     'wpy==0.5.*',
-    'rich',
 ]
 
 # What packages are optional?

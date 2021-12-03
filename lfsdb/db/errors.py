@@ -5,8 +5,19 @@
 异常
 """
 
-class FileStorageError(Exception):
-    pass
+class LfsdbError(Exception):
+    NAME = ''
 
-class FSQueryError(Exception):
-    pass
+    @classmethod
+    def get_error(cls, name):
+        for item in cls.__subclasses__():
+            if item.NAME == name:
+                return item
+        return None
+
+class FileStorageError(LfsdbError):
+    NAME = 'FileStorageError'
+
+class FSQueryError(LfsdbError):
+    NAME = 'FSQueryError'
+

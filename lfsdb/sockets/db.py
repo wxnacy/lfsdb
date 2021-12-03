@@ -6,6 +6,7 @@ socket lfs 客户端
 """
 
 from lfsdb.sockets.client import Client
+from lfsdb.db.errors import LfsdbError
 
 class SocketStorage(object):
     pass
@@ -25,6 +26,9 @@ class SocketTable(object):
         params.update(kwargs)
         res = self.client.exec(self.db, self.table, method, params)
         self.close()
+
+        if res.error_name:
+            raise LfsdbError.get_error(res.error_name)(res.data)
 
         return res.json() or res.data
 
@@ -76,7 +80,7 @@ class SocketTable(object):
         """
         return self._exec('delete', **self._build_params(locals()))
 
-    def drop(self, query):
+    def drop(self):
         """
         删除表
         """
@@ -93,11 +97,14 @@ class SocketTable(object):
 
 if __name__ == "__main__":
     table = SocketTable('lfsdb_test','socket')
-    _id = table.insert({"ss": "ss"})
+    doc = { "_id": "1234", "name": "wxnacy" }
+    _id = table.insert(doc)
     print(_id)
-    table.update({ "_id": _id }, { "name": "wxnacy" })
-    import json
-    print(json.dumps(table.find_by_id(_id), indent=4))
+    _id = table.insert(doc)
+    print(_id)
+    #  table.update({ "_id": _id }, { "name": "wxnacy" })
+    #  import json
+    #  print(json.dumps(table.find_by_id(_id), indent=4))
     #  table.drop()
     #  table.close()
          

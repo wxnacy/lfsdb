@@ -20,11 +20,11 @@ root = '/tmp'
 root = None
 db_name = 'wpy_db'
 table = 'wpy_table'
-db = FileStorage(root).get_db(db_name).get_table(table)
+#  db = FileStorage(root).get_db(db_name).get_table(table)
 
 file_table = FileStorage(root).get_db(db_name).get_table(table)
 socket_table = SocketTable(db_name, table)
-table_root = os.path.join(db.root, db_name, table)
+table_root = os.path.join(file_table.root, db_name, table)
 
 def _origin_data(data):
     for k in ('_id', '_update_time', "_create_time"):
@@ -61,6 +61,10 @@ def _test_insert(db):
     assert not os.path.exists(table_root)
 
 def test_find():
+    _test_find(file_table)
+    _test_find(socket_table)
+
+def _test_find(db):
     name = randoms.random_str(6)
     doc = { "name": name}
     db.drop()
@@ -96,6 +100,10 @@ def test_find():
     db.drop()
 
 def test_update():
+    _test_update(file_table)
+    _test_update(socket_table)
+
+def _test_update(db):
     # TODO 缓存
     name = randoms.random_str(6)
     doc = { "name": name}
@@ -115,6 +123,10 @@ def test_update():
     db.drop()
 
 def test_delete():
+    _test_delete(file_table)
+    _test_delete(socket_table)
+
+def _test_delete(db):
     name = randoms.random_str(6)
     doc = { "name": name}
     db.insert(doc)
@@ -132,6 +144,10 @@ def test_delete():
     db.drop()
 
 def test_sort():
+    _test_sort(file_table)
+    _test_sort(socket_table)
+
+def _test_sort(db):
 
     arr = [{"age": 5, "id": 2}, {"age": 5, "id": 5}, {"age": 3, "id": 4}]
     for a in arr:
