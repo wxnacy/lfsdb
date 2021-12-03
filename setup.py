@@ -113,6 +113,7 @@ setup(
             'lfs=lfsdb.cli.lfs:main',
             'lfsdu=lfsdb.cli.lfsdu:main',
             'lfsd=lfsdb.cli.server:main',
+            #  'lfsdb=lfsdb.cli.lfsdb:main',
         ],
     },
     install_requires=REQUIRED,

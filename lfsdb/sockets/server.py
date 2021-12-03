@@ -6,10 +6,23 @@
 """
 
 import socket               # 导入 socket 模块
+import traceback
 
 from lfsdb.sockets.constants import SocketConstants
 from lfsdb.sockets.models import SocketRequest
 from lfsdb.sockets.models import SocketResponse
+from lfsdb.sockets.exceptions import ServerStopException
+
+from threading import Event
+
+done_event = Event()
+
+def handle_sigint(signum, frame):
+    done_event.set()
+
+import signal
+signal.signal(signal.SIGINT, handle_sigint)
+
 
 class Server(object):
 
@@ -29,19 +42,50 @@ class Server(object):
         self.socket.listen(5)
 
         while True:
-            c,addr = self.socket.accept()     # 建立客户端连接
-            print('连接地址：', c, addr)
-            req = self.receive_message(c)
-            print(req.is_stop())
-            if req.is_stop():
+            if done_event.is_set():
                 print('服务停止')
-                c.send(SocketResponse(data = '服务停止').dumps())
-                c.close()
                 break
-            print(req)
-            res = req.run()
-            c.send(res.dumps())
-            c.close()                # 关闭连接
+            try:
+                self.accept()
+            except ServerStopException:
+                break
+            except:
+                print(traceback.format_exc())
+                print(traceback.format_stack())
+
+    def accept(self):
+        """接收客户端信息"""
+        c,addr = self.socket.accept()     # 建立客户端连接
+        print('连接地址：', c, addr)
+        #  try:
+        self._accept(c)
+        #  except ServerStopException:
+            #  break
+        #  except:
+            #  print(traceback.format_exc())
+            #  print(traceback.format_stack())
+        c.close()                # 关闭连接
+
+    def _accept(self, socket):
+        """接收客户端信息"""
+        req = self.receive_message(socket)
+        if req.is_unkown():
+            socket.send(SocketResponse.build_unkown().dumps())
+            return
+
+        # 回复心跳信息
+        if req.is_heart():
+            socket.send(SocketResponse().dumps())
+            return
+
+        print(req.is_stop())
+        if req.is_stop():
+            print('服务停止')
+            socket.send(SocketResponse(data = '服务停止').dumps())
+            raise ServerStopException()
+        print(req)
+        res = req.run()
+        socket.send(res.dumps())
 
     def receive_message(self, receive_socket: socket.socket):
         """接收消息"""

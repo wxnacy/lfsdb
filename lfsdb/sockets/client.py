@@ -33,10 +33,17 @@ class Client(object):
         print(res.data)
 
     def stop_server(self):
+        """停止服务"""
         data = SocketRequest().build_stop().dumps()
         self.socket.send(data)
         res = self.receive_message()
         print(res.data)
+
+    def heart(self):
+        """发送心跳信息"""
+        data = SocketRequest().build_heart().dumps()
+        self.socket.send(data)
+        return self.receive_message()
 
     def close(self):
         self.socket.close()
@@ -58,7 +65,7 @@ if __name__ == "__main__":
         "query": { "_id": "20210806152807_1628234887" }
     }
     #  client.exec('wush', 'version', 'find', params)
-    client.stop_server()
+    #  client.stop_server()
+    client.heart()
 
     client.close()
-     
