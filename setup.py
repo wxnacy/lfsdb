@@ -23,7 +23,8 @@ VERSION = None
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'wpy',
+    'wpy==0.5.*',
+    'rich',
 ]
 
 # What packages are optional?
@@ -103,7 +104,7 @@ setup(
     author_email=EMAIL,
     python_requires=REQUIRES_PYTHON,
     url=URL,
-    packages=find_packages(include=["dler"]),
+    packages=find_packages(include=["lfsdb"]),
     # If your package is a single module, use this instead of 'packages':
     # py_modules=['mypackage'],
 
