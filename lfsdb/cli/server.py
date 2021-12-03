@@ -17,7 +17,7 @@ logger = get_logger(__name__)
 def heart():
     while True:
         time.sleep(2)
-        logger.info(time.time())
+        #  logger.info(time.time())
         #  c = Client()
         #  c.connect()
         #  c.heart()

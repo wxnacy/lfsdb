@@ -7,11 +7,13 @@
 
 import socket               # 导入 socket 模块
 
+from lfsdb.common.loggers import get_logger
 from lfsdb.sockets.constants import SocketConstants
 from lfsdb.sockets.models import SocketRequest
 from lfsdb.sockets.models import SocketResponse
 
 class Client(object):
+    logger = get_logger('SocketClient')
 
     def __init__(self, *args, **kwargs):
         self.socket = socket.socket()
@@ -57,9 +59,23 @@ class Client(object):
             if not fragment:
                 break
             data += fragment
-        return SocketResponse.loads(data)
+        self.logger.debug('接收服务端信息 %s', data)
+        res = SocketResponse.loads(data)
+        self.logger.debug('接收服务端信息 %s', res.to_dict())
+        return res
 
 if __name__ == "__main__":
+    client = Client()
+    client.connect()
+    params = {
+        "query": { "_id": "20210806152807_1628234887" }
+    }
+    client.exec('wush', 'version', 'find', params)
+    #  client.stop_server()
+    #  client.heart()
+
+    client.close()
+
     client = Client()
     client.connect()
     params = {

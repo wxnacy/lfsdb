@@ -16,17 +16,28 @@ from .errors import FileStorageError
 from .errors import FSQueryError
 from .query import FSQuery
 from .cache import FILE_CACHE
+from lfsdb.common.loggers import get_logger
 
 class FileStorage(object):
+    logger = get_logger('FileStorage')
+
     def __init__(self, root=None):
         """
         :param str root: 数据存储根路径
         """
+        # 处理数据库存储位置
         if not root:
-            root = os.path.expanduser('~/.lfsdb/data')
+            root = os.path.expanduser('~/.lfsdb')
+        if not root.endswith('/data'):
+            root = os.path.join(root, 'data')
+
         self.root = root
+        self.logger.info('FileStorage root %s', self.root)
         # 备份根路径
         self.dump_root = os.path.expanduser('~/.lfsdb/dump')
+        self.logger.info('FileStorage dump_root %s', self.dump_root)
+
+        # 创建目录
         if not os.path.exists(self.root):
             os.makedirs(self.root)
         if not os.path.exists(self.dump_root):
@@ -148,6 +159,10 @@ class FileTable(FileDB):
         # 写入缓存
         FILE_CACHE.set(data)
         return _id
+
+
+    def find_by_id(self, _id):
+        return self.find_one_by_id(_id)
 
     def find_one_by_id(self, _id):
         """通过 _id 查找"""

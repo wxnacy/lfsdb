@@ -78,12 +78,11 @@ class Server(object):
             socket.send(SocketResponse().dumps())
             return
 
-        print(req.is_stop())
         if req.is_stop():
             print('服务停止')
             socket.send(SocketResponse(data = '服务停止').dumps())
             raise ServerStopException()
-        print(req)
+        print(req.to_dict())
         res = req.run()
         socket.send(res.dumps())
 

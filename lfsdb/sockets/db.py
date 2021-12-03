@@ -7,27 +7,32 @@ socket lfs 客户端
 
 from lfsdb.sockets.client import Client
 
-class LfsSocketClient(object):
+class SocketStorage(object):
     pass
 
-class LfsSocketDB(object):
+class SocketDB(object):
     pass
 
-class LfsSocketTable(object):
+class SocketTable(object):
     def __init__(self, db, table):
         self.db = db
         self.table = table
-        self.client = Client()
 
     def _exec(self, method, **kwargs):
+        self.client = Client()
         self.client.connect()
         params = {}
         params.update(kwargs)
         res = self.client.exec(self.db, self.table, method, params)
-        self.client.close()
+        self.close()
 
         return res.json() or res.data
 
+    def close(self):
+        try:
+            self.client.close()
+        except:
+            pass
 
     def find(self, query=None, projection=None, **kwargs):
         """
@@ -35,17 +40,47 @@ class LfsSocketTable(object):
         """
         return self._exec('find', **self._build_params(locals()))
 
+    def find_one(self, query=None, projection=None, **kwargs):
+        """
+        查询单个 doc
+        """
+        return self._exec('find_one', **self._build_params(locals()))
+
     def find_by_id(self, _id):
         """
         根据 _id 查询
         """
-        return self._exec('find_one_by_id', **self._build_params(locals()))
+        return self._exec('find_by_id', **self._build_params(locals()))
+
+    def count(self, doc):
+        """
+        查询数量
+        """
+        return self._exec('count', **self._build_params(locals()))
 
     def insert(self, doc):
         """
         插入数据
         """
         return self._exec('insert', **self._build_params(locals()))
+
+    def update(self, query, update_data):
+        """
+        修改数据
+        """
+        return self._exec('update', **self._build_params(locals()))
+
+    def delete(self, query):
+        """
+        删除数据
+        """
+        return self._exec('delete', **self._build_params(locals()))
+
+    def drop(self, query):
+        """
+        删除表
+        """
+        return self._exec('drop', **self._build_params(locals()))
 
     @classmethod
     def _build_params(cls, locals_params):
@@ -57,10 +92,12 @@ class LfsSocketTable(object):
         return params
 
 if __name__ == "__main__":
-    table = LfsSocketTable('lfsdb_test', 'socket')
-    res = table.insert({ "name": "wxnacy" })
-    query = { "_id": "20210806152807_1628234887" }
-    #  res = table.find(query)
-    #  res = table.find_by_id(query.get("_id"))
-    print(res)
-
+    table = SocketTable('lfsdb_test','socket')
+    _id = table.insert({"ss": "ss"})
+    print(_id)
+    table.update({ "_id": _id }, { "name": "wxnacy" })
+    import json
+    print(json.dumps(table.find_by_id(_id), indent=4))
+    #  table.drop()
+    #  table.close()
+         

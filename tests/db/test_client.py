@@ -8,17 +8,22 @@
 import pytest
 import os
 
+from wpy.files import FileUtils
+from wpy.tools import randoms
+
 from lfsdb import FileStorage
 from lfsdb.db import FileStorageError
 from lfsdb.db.errors import FSQueryError
-from wpy.files import FileUtils
-from wpy.tools import randoms
+from lfsdb.sockets.db import SocketTable
 
 root = '/tmp'
 root = None
 db_name = 'wpy_db'
 table = 'wpy_table'
 db = FileStorage(root).get_db(db_name).get_table(table)
+
+file_table = FileStorage(root).get_db(db_name).get_table(table)
+socket_table = SocketTable(db_name, table)
 table_root = os.path.join(db.root, db_name, table)
 
 def _origin_data(data):
@@ -27,18 +32,22 @@ def _origin_data(data):
     return data
 
 def test_insert():
+    _test_insert(file_table)
+    _test_insert(socket_table)
+
+def _test_insert(db):
     name = randoms.random_str(6)
     doc = {
         "name": name
     }
+    # 查看插入的数据是否存入到文件中
     _id = db.insert(doc)
-
     path = os.path.join(table_root, _id)
     data = FileUtils.read_dict(path)
     data = _origin_data(data)
     assert doc == data
 
-    data = db.find_one_by_id(_id)
+    data = db.find_by_id(_id)
     data = _origin_data(data)
     assert doc == data
 
@@ -54,6 +63,7 @@ def test_insert():
 def test_find():
     name = randoms.random_str(6)
     doc = { "name": name}
+    db.drop()
     db.insert(doc)
     db.insert(doc)
     doc['age'] = 12
@@ -97,8 +107,8 @@ def test_update():
     assert count == 3
 
     db.update({"_id": _id}, {"name": "wxn"})
-    data = db.find_one_by_id(_id)
-    data = db.find_one_by_id(_id)
+    data = db.find_by_id(_id)
+    data = db.find_by_id(_id)
     data = _origin_data(data)
     assert { "name": "wxn" } == data
 
@@ -134,3 +144,5 @@ def test_sort():
     assert items == [{"age": 3, "id": 4},{"age": 5, "id": 5}, {"age": 5, "id": 2}]
 
     db.drop()
+
+socket_table.close()
