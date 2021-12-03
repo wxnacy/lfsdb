@@ -14,4 +14,4 @@ class SocketConstants(object):
     PORT = 60608
     HOST = localhost
 
-    FRAGMENT_SIZE = 1 * 1024 # * 1024
+    FRAGMENT_SIZE = 16 * 1024 * 1024

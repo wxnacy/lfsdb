@@ -10,6 +10,7 @@ import socket               # 导入 socket 模块
 from lfsdb.sockets.constants import SocketConstants
 from lfsdb.sockets.models import SocketRequest
 from lfsdb.sockets.models import SocketResponse
+from lfsdb.sockets.models import SRAction
 
 class Client(object):
 
@@ -31,6 +32,12 @@ class Client(object):
         res = self.receive_message()
         print(res.data)
 
+    def stop_server(self):
+        data = SocketRequest().build_stop().dumps()
+        self.socket.send(data)
+        res = self.receive_message()
+        print(res.data)
+
     def close(self):
         self.socket.close()
 
@@ -48,9 +55,10 @@ if __name__ == "__main__":
     client = Client()
     client.connect()
     params = {
-        "query": { "_id": 20 }
+        "query": { "_id": "20210806152807_1628234887" }
     }
-    client.exec('jable', 'video', 'find', params)
+    #  client.exec('wush', 'version', 'find', params)
+    client.stop_server()
 
     client.close()
      
