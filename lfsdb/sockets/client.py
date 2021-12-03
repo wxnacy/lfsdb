@@ -10,7 +10,6 @@ import socket               # 导入 socket 模块
 from lfsdb.sockets.constants import SocketConstants
 from lfsdb.sockets.models import SocketRequest
 from lfsdb.sockets.models import SocketResponse
-from lfsdb.sockets.models import SRAction
 
 class Client(object):
 
@@ -30,7 +29,8 @@ class Client(object):
         self.socket.send(sq.dumps())
 
         res = self.receive_message()
-        print(res.data)
+        print(res.data, type(res.data))
+        return res
 
     def stop_server(self):
         """停止服务"""
@@ -38,6 +38,7 @@ class Client(object):
         self.socket.send(data)
         res = self.receive_message()
         print(res.data)
+        return res
 
     def heart(self):
         """发送心跳信息"""

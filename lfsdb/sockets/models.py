@@ -73,6 +73,7 @@ class SocketRequest(PickleModel):
     def run(self):
         """运行结果"""
         data = getattr(self.get_db(), self.method)(**self.params)
+        print(data)
         return SocketResponse(data = data)
 
 class SocketResponse(PickleModel):
@@ -81,7 +82,8 @@ class SocketResponse(PickleModel):
 
     def json(self):
         """将数据格式化为 dict 结构"""
-        if isinstance(self.data, dict):
+        if isinstance(self.data, dict) or \
+                isinstance(self.data, list):
             return self.data
         else:
             try:

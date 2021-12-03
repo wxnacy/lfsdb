@@ -23,27 +23,61 @@ def heart():
         #  c.heart()
         #  c.close()
 
-def stop():
-    c = Client()
-    c.connect()
-    c.stop_server()
-    c.close()
 
 def main():
-    import sys
-    args = sys.argv[1:]
-    typ = 'start'
-    if args:
-        typ = args[0]
-    if typ == 'stop':
-        stop()
-    else:
+    Command().run()
+
+class Command(object):
+
+    def _heart(self):
+        """发起一次心跳，并返回服务是否正常运行"""
+        try:
+            c = Client()
+            c.connect()
+            res = c.heart()
+            c.close()
+            return res.code == 0
+        except:
+            return False
+
+    def stop(self):
+        """停止服务"""
+        c = Client()
+        c.connect()
+        c.stop_server()
+        c.close()
+        print('服务停止')
+
+    def status(self):
+        """查看服务状态"""
+        is_start = self._heart()
+        if is_start:
+            print('服务状态：运行中')
+        else:
+            print('服务状态：已停止')
+
+
+    def start(self):
+        """运行服务"""
+        is_start = self._heart()
+        if is_start:
+            print('服务已经在运行')
+            return
+
         p = Process(target=heart)
         p.daemon = True
         p.start()
 
         Server().run()
 
+    def run(self):
+        import sys
+        args = sys.argv[1:]
+        typ = 'start'
+        if args:
+            typ = args[0]
+        func_name = typ
+        getattr(self, func_name)()
 
 if __name__ == "__main__":
     main()
