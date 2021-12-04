@@ -11,10 +11,10 @@ import uuid
 from datetime import datetime
 from wpy.files import FileUtils
 from wpy.files import ZipUtils
+from .base import BaseTable
 from .errors import FileStorageError
 from .errors import FSQueryError
 from .query import FSQuery
-from .cache import FILE_CACHE
 from lfsdb.common.loggers import get_logger
 from wpy.tools import sorted_plus
 
@@ -126,194 +126,42 @@ class FileDB(FileStorage):
         names.sort(key = lambda x: x, reverse=True)
         return names[0] if names else None
 
-class FileTable(FileDB):
+class FileTable(BaseTable):
     def __init__(self, root, db, table):
-        super().__init__(root, db)
         self.table = table
         # 表根路径
         self.table_root = os.path.join(os.path.expanduser(root), db, table)
-        FILE_CACHE.init(db, table)
+        #  self._create_table_root()
 
     def _create_table_root(self):
-        self._create_root(self.table_root)
+        if not os.path.exists(self.table_root):
+            os.makedirs(self.table_root)
 
-    def _generage_id(self):
-        """生成 id"""
-        return str(uuid.uuid4())
-
-    def insert(self, doc):
-        """
-        插入文档
-        """
-        data = dict(doc)
+    def _write(self, doc):
+        """写入数据"""
         self._create_table_root()
-        _id = doc.get("_id") or self._generage_id()
-        if self._exists_id(_id):
-            raise FileStorageError('{}._id {} is exists'.format(self.table, _id))
-        data['_id'] = _id
-        data['_create_time'] = self._now()
-        data['_update_time'] = self._now()
+        _id = doc['_id']
         doc_path = os.path.join(self.table_root, _id)
         # 写入文件
-        FileUtils.write_dict(doc_path, data)
-        # 写入缓存
-        FILE_CACHE.set(data)
-        return _id
-
-
-    def find_by_id(self, _id):
-        return self.find_one_by_id(_id)
-
-    def find_one_by_id(self, _id):
-        """通过 _id 查找"""
-        cache = FILE_CACHE.get(_id)
-        if cache:
-            return cache
-        if self._exists_id(_id):
-            doc = self._read_by_id(_id)
-            FILE_CACHE.set(doc)
-            return doc
-        return None
-
-    def find(self, query=None, projection=None, **kwargs):
-        """
-        查询列表
-
-        :param dict query: 查询条件
-            {"name": "wxnacy", "_create_time": { "$gt": "2021-08-06" }}
-        :param dict projection: 需要返回的字段
-            {"_id": 0}
-        :param kwargs:
-            `sort`: [('age', 1), ('_create_time', -1)]
-                使用 `age` 正序排列，`_create_time` 倒序排列
-        """
-        if not query:
-            query = {}
-        if not projection:
-            projection = {}
-
-        # 先将 _id 从过滤条件中提取出来
-        projection_id_type = projection.pop('_id', None)
-
-        # 判断过滤字段中，是否有 1 和 0 的混用，_id 除外
-        # 例如 { "field1": 1, "field1": 0 } 不允许出现
-        projection_values = set(projection.values())
-        if len(projection_values) > 1:
-            raise FSQueryError(('Projection cannot have a mix of inclusion'
-                ' and exclusion.'))
-
-        # 判断过滤字段的条件是 include 还是 exclude
-        projection_type = list(projection_values)[0] if len(
-                projection_values) > 0 else None
-
-        # 如果查询条件中出现 _id，则直接查询该 _id
-        if '_id' in query:
-            item = self.find_one_by_id(query['_id'])
-            return [item] if item else []
-
-        # 列出表内所有 id
-        ids = FILE_CACHE.list_ids() or self._list_ids()
-        res = []
-        # 构建查询条件模型实例
-        fsquery = FSQuery(query)
-        for _id in ids:
-            doc = FILE_CACHE.get(_id)
-            if not doc:
-                doc  = self._read_by_id(_id)
-                FILE_CACHE.set(doc)
-            # 判断 doc 是否符合 query 条件
-            if fsquery.exists(doc):
-                # 过滤指定字段
-                doc = self._get_projection_doc(doc, projection, projection_type)
-                # 判断是否返回 _id 字段
-                if projection_id_type == 1:
-                    doc['_id'] = _id
-                elif projection_type == 0:
-                    doc.pop('_id', None)
-                res.append(doc)
-
-        # 默认使用时间排序
-        sorter = kwargs.get('sorter', [('_create_time', 1)])
-        sorted_plus(res, sorter = sorter)
-        return res
-
-    def find_one(self, query=None, projection=None, **kwargs):
-        docs = self.find(query, projection, **kwargs)
-        return docs[0] if docs else None
-
-    def count(self, query=None):
-        """
-        查询数量
-        """
-        projection = { "_id": 1 }
-        return len(self.find(query, projection=projection))
-
-    def update(self, query, update_data):
-        if '_id' in update_data:
-            raise FileStorageError('_id can not update')
-        docs = self.find(query)
-        count = 0
-        for doc in docs:
-            doc.update(update_data)
-            if self._update(doc):
-                count += 1
-                FILE_CACHE.set(doc)
-        return count
-
-    def delete(self, query):
-        """删除数据"""
-        docs = self.find(query)
-        count = 0
-        for doc in docs:
-            _id = doc.get("_id")
-            if self._delete_by_id(_id):
-                FILE_CACHE.remove(_id)
-                count += 1
-        return count
+        FileUtils.write_dict(doc_path, doc)
+        return True
 
     def drop(self):
         """删除表"""
         if os.path.exists(self.table_root):
             # 删除本地表目录
             shutil.rmtree(self.table_root)
-        # 缓存删除表
-        FILE_CACHE.drop()
 
-    def _get_projection_doc(self, doc, projection, projection_type):
-        if not projection:
-            return doc
-
-        if projection_type == 0:
-            for k, v in projection.items():
-                doc.pop(k)
-            return doc
-        res = {"_id": doc.get("_id")}
-        for k, v in projection.items():
-            if v == 1 and k in doc:
-                res[k] = doc[k]
-        return res
 
     def _delete_by_id(self, _id):
-        if self._exists_id(_id):
-            os.remove(self._generage_path(_id))
-            return True
-        return False
+        os.remove(self._generage_path(_id))
+        return True
 
     def _update(self, doc):
         _id = doc.get("_id")
-        doc['_update_time'] = self._now()
         FileUtils.write_dict(self._generage_path(_id), doc)
         return True
 
-    def _now(self):
-        """获取当前时间"""
-        return str(datetime.now())
-
-    def _exists_doc(self, query, doc):
-        for k, v in query.items():
-            if doc.get(k) != v:
-                return False
-        return True
 
     def _list_ids(self):
         """列出当前表内的 id 列表"""

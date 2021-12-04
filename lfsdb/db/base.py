@@ -165,7 +165,7 @@ class BaseTable(BaseObject, metaclass=ABCMeta):
         return str(uuid.uuid4())
 
     @abstractmethod
-    def _write(doc):
+    def _write(self, doc):
         """写入数据"""
 
     @abstractmethod
