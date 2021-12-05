@@ -14,26 +14,38 @@ from wpy.tools import randoms
 from lfsdb import FileStorage
 from lfsdb.db import FileStorageError
 from lfsdb.db.errors import FSQueryError
+from lfsdb.db.cache import CacheTable
+from lfsdb.db.client import FileTable
 from lfsdb.sockets.db import SocketTable
 
 root = '/tmp'
 root = None
 db_name = 'wpy_db'
 table = 'wpy_table'
-#  db = FileStorage(root).get_db(db_name).get_table(table)
 
-file_table = FileStorage(root).get_db(db_name).get_table(table)
+fs = FileStorage(root)
+
+file_table = fs.get_db(db_name).get_table(table)
 socket_table = SocketTable(db_name, table)
-table_root = os.path.join(file_table.root, db_name, table)
+cache_table = CacheTable(db_name, table)
+
+tables = [file_table, socket_table, cache_table]
+
+table_root = os.path.join(fs.root, db_name, table)
 
 def _origin_data(data):
     for k in ('_id', '_update_time', "_create_time"):
         data.pop(k, None)
     return data
 
+def _handle_table_test(func):
+    for table in tables:
+        table.drop()
+        func(table)
+        table.drop()
+
 def test_insert():
-    _test_insert(file_table)
-    _test_insert(socket_table)
+    _handle_table_test(_test_insert)
 
 def _test_insert(db):
     name = randoms.random_str(6)
@@ -42,10 +54,11 @@ def _test_insert(db):
     }
     # 查看插入的数据是否存入到文件中
     _id = db.insert(doc)
-    path = os.path.join(table_root, _id)
-    data = FileUtils.read_dict(path)
-    data = _origin_data(data)
-    assert doc == data
+    if isinstance(db, FileTable):
+        path = os.path.join(table_root, _id)
+        data = FileUtils.read_dict(path)
+        data = _origin_data(data)
+        assert doc == data
 
     data = db.find_by_id(_id)
     data = _origin_data(data)
@@ -61,8 +74,7 @@ def _test_insert(db):
     assert not os.path.exists(table_root)
 
 def test_find():
-    _test_find(file_table)
-    _test_find(socket_table)
+    _handle_table_test(_test_find)
 
 def _test_find(db):
     name = randoms.random_str(6)
@@ -100,8 +112,7 @@ def _test_find(db):
     db.drop()
 
 def test_update():
-    _test_update(file_table)
-    _test_update(socket_table)
+    _handle_table_test(_test_update)
 
 def _test_update(db):
     # TODO 缓存
@@ -109,6 +120,7 @@ def _test_update(db):
     doc = { "name": name}
     db.insert(doc)
     _id = db.insert(doc)
+    insert_utime = db.find_by_id(_id).get("_update_time")
     db.insert(doc)
 
     count = db.update(doc, {"name": "wxnacy"})
@@ -116,6 +128,10 @@ def _test_update(db):
 
     db.update({"_id": _id}, {"name": "wxn"})
     data = db.find_by_id(_id)
+    update_utime = data.get("_update_time")
+    # 检查修改时间是否改变
+    assert insert_utime < update_utime
+
     data = db.find_by_id(_id)
     data = _origin_data(data)
     assert { "name": "wxn" } == data
@@ -123,10 +139,10 @@ def _test_update(db):
     db.drop()
 
 def test_delete():
-    _test_delete(file_table)
-    _test_delete(socket_table)
+    _handle_table_test(_test_delete)
 
 def _test_delete(db):
+    db.drop()
     name = randoms.random_str(6)
     doc = { "name": name}
     db.insert(doc)
@@ -144,10 +160,10 @@ def _test_delete(db):
     db.drop()
 
 def test_sort():
-    _test_sort(file_table)
-    _test_sort(socket_table)
+    _handle_table_test(_test_sort)
 
 def _test_sort(db):
+    db.drop()
 
     arr = [{"age": 5, "id": 2}, {"age": 5, "id": 5}, {"age": 3, "id": 4}]
     for a in arr:
@@ -157,6 +173,7 @@ def _test_sort(db):
         item.pop('_id', None)
         item.pop('_create_time', None)
         item.pop('_update_time', None)
+
     assert items == [{"age": 3, "id": 4},{"age": 5, "id": 5}, {"age": 5, "id": 2}]
 
     db.drop()
