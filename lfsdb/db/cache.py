@@ -5,6 +5,8 @@
 缓存存储
 """
 
+import msgpack
+
 from lfsdb.db.base import BaseTable
 from lfsdb.common.cache import CACHE
 
@@ -16,6 +18,14 @@ class CacheTable(BaseTable):
     def __init__(self, db, table):
         super().__init__(db, table)
         self.key = '{}-{}'.format(db, table)
+
+    def _dumps_doc(self, doc):
+        #  doc = msgpack.dumps(doc, use_bin_type=True)
+        return doc
+
+    def _loads_doc(self, doc):
+        #  doc = msgpack.loads(doc, use_bin_type=True)
+        return doc
 
     def drop(self):
         """删除表"""
@@ -32,6 +42,7 @@ class CacheTable(BaseTable):
         如果成功需要返回 True
         """
         _id = doc.get("_id")
+        doc = self._dumps_doc(doc)
         self.cache.hset(self.key, _id, doc)
         return True
 
@@ -41,7 +52,10 @@ class CacheTable(BaseTable):
 
     def _read_by_id(self, _id):
         """使用 _id 读取数据"""
-        return self.cache.hget(self.key, _id)
+        doc = self.cache.hget(self.key, _id)
+        if doc:
+            doc = self._loads_doc(doc)
+        return doc
 
     def _exists_id(self, _id):
         """是否存在 _id"""
@@ -49,4 +63,5 @@ class CacheTable(BaseTable):
 
     def _write(self, doc):
         """写入数据"""
+        doc = self._dumps_doc(doc)
         self.cache.hset(self.key, doc['_id'], doc)
