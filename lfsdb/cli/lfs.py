@@ -20,7 +20,7 @@ def main():
     fields = []
     if len(args) > 3:
         fields = args[3:]
-    item = db.get_db(_db).get_table(table).find_one_by_id(_id)
+    item = db.get_db(_db).get_table(table).find_by_id(_id)
     data = {}
     print(fields)
     if fields:

@@ -72,7 +72,7 @@ class FSModel(object):
         return item
 
     @classmethod
-    def find_one_by_id(cls, _id, db_col=None):
+    def find_by_id(cls, _id, db_col=None):
         if not db_col:
             db_col = {}
         item = cls.db_col(**db_col).find_one_by_id(_id)

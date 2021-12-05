@@ -42,7 +42,7 @@ def col_md5(dirname):
         _id = md5(path)
         print(_id, path)
         count += 1
-        video = File.find_one_by_id(_id)
+        video = File.find_by_id(_id)
         if video:
             continue
         video = File(_id = md5(path))
