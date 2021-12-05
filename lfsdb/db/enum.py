@@ -14,3 +14,18 @@ class QueryOperator(BaseEnum):
     GTE = '$gte'    # 大于等于
     LT = '$lt'      # 小于
     LTE = '$lte'    # 小于等于
+
+class TableFunction(BaseEnum):
+    FIND = 'find'
+    FIND_BY_ID = 'find_by_id'
+    FIND_ONE = 'find_one'
+    INSERT = 'insert'
+    UPDATE = 'update'
+    DELETE = 'delete'
+    DROP = 'drop'
+
+    @classmethod
+    def write_values(cls):
+        """写入类操作"""
+        return (cls.INSERT.value, cls.UPDATE.value, cls.DELETE.value,
+            cls.DROP.value)
