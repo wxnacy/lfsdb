@@ -5,7 +5,7 @@
 模型
 """
 
-import pickle
+import msgpack
 import json
 
 from wpy.base import BaseObject
@@ -18,12 +18,12 @@ class PickleModel(BaseObject):
 
     def dumps(self):
         '''序列化'''
-        return pickle.dumps(self.to_dict())
+        return msgpack.dumps(self.to_dict())
 
     @classmethod
     def loads(cls, bytes_data):
         """加载"""
-        data = pickle.loads(bytes_data)
+        data = msgpack.loads(bytes_data)
         return cls(**data)
 
 class SRAction(BaseEnum):
