@@ -11,7 +11,7 @@ from abc import abstractmethod
 from datetime import datetime
 
 from wpy.base import BaseObject
-from wpy.tools import sorted_plus
+from wpy import ListUtils
 
 from lfsdb.common.loggers import get_logger
 from .errors import FileStorageError
@@ -101,7 +101,7 @@ class BaseTable(BaseObject, metaclass=ABCMeta):
 
         # 默认使用时间排序
         sorter = kwargs.get('sorter', [('_create_time', 1)])
-        sorted_plus(res, sorter = sorter)
+        ListUtils.sorted_plus(res, sorter = sorter)
         return res
 
     def find_one(self, query=None, projection=None, **kwargs):

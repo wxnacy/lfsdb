@@ -23,7 +23,7 @@ VERSION = None
 
 # What packages are required for this module to be executed?
 REQUIRED = [
-    'wpy==0.5.*',
+    'wpy==0.6.*',
     'msgpack',
 ]
 

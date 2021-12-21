@@ -7,16 +7,11 @@
 
 import os
 import shutil
-import uuid
 from datetime import datetime
 from wpy.files import FileUtils
 from wpy.files import ZipUtils
 from .base import BaseTable
-from .errors import FileStorageError
-from .errors import FSQueryError
-from .query import FSQuery
 from lfsdb.common.loggers import get_logger
-from wpy.tools import sorted_plus
 
 class FileStorage(object):
     logger = get_logger('FileStorage')

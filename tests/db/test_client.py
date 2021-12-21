@@ -9,7 +9,7 @@ import pytest
 import os
 
 from wpy.files import FileUtils
-from wpy.tools import randoms
+from wpy import RandomUtils
 
 from lfsdb import FileStorage
 from lfsdb.db import FileStorageError
@@ -48,7 +48,7 @@ def test_insert():
     _handle_table_test(_test_insert)
 
 def _test_insert(db):
-    name = randoms.random_str(6)
+    name = RandomUtils.random_str(6)
     doc = {
         "name": name
     }
@@ -77,7 +77,7 @@ def test_find():
     _handle_table_test(_test_find)
 
 def _test_find(db):
-    name = randoms.random_str(6)
+    name = RandomUtils.random_str(6)
     doc = { "name": name}
     db.drop()
     db.insert(doc)
@@ -116,7 +116,7 @@ def test_update():
 
 def _test_update(db):
     # TODO 缓存
-    name = randoms.random_str(6)
+    name = RandomUtils.random_str(6)
     doc = { "name": name}
     db.insert(doc)
     _id = db.insert(doc)
@@ -143,7 +143,7 @@ def test_delete():
 
 def _test_delete(db):
     db.drop()
-    name = randoms.random_str(6)
+    name = RandomUtils.random_str(6)
     doc = { "name": name}
     db.insert(doc)
     _id = db.insert(doc)
