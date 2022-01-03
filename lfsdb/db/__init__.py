@@ -5,12 +5,14 @@
 
 """
 
+from .client import FileStorage
 from .errors import FileStorageError
 from .models import FSColumn
 from .models import FSModel
 
 __all__ = [
     'FileStorageError',
+    'FileStorage',
     'FSColumn',
     'FSModel',
 ]

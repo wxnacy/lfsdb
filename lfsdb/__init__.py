@@ -5,12 +5,12 @@
 
 """
 
-from .db.client import FileStorage
-from .db.models import FSColumn
-from .db.models import FSModel
+from .db import FileStorage
+from .db import FSColumn
+from .db import FSModel
 
 __all__ = [
     'FileStorage',
     'FSColumn',
     'FSModel',
-        ]
+]
