@@ -11,9 +11,9 @@ from abc import abstractmethod
 from datetime import datetime
 
 from wpy.base import BaseObject
-from wpy import ListUtils
+from wpy.lists import sorted_plus
 
-from lfsdb.common.loggers import get_logger
+#  from lfsdb.common.loggers import get_logger
 from .errors import FileStorageError
 from .errors import FSQueryError
 from .query import FSQuery
@@ -37,6 +37,9 @@ class BaseTable(BaseObject, metaclass=ABCMeta):
         data['_update_time'] = self._now()
         self._write(data)
         return _id
+
+    def find_one_by_id(self, _id):
+        return self.find_by_id(_id)
 
     def find_by_id(self, _id):
         """通过 _id 查找"""
@@ -101,7 +104,7 @@ class BaseTable(BaseObject, metaclass=ABCMeta):
 
         # 默认使用时间排序
         sorter = kwargs.get('sorter', [('_create_time', 1)])
-        ListUtils.sorted_plus(res, sorter = sorter)
+        sorted_plus(res, sorter = sorter)
         return res
 
     def find_one(self, query=None, projection=None, **kwargs):

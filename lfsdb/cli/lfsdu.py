@@ -10,7 +10,7 @@ import m3u8
 import hashlib
 from collections import defaultdict
 
-from wpy.files import FileUtils
+from wpy.path import walkfile
 from lfsdb import FSModel
 from lfsdb import FSColumn
 
@@ -38,7 +38,7 @@ class File(FSModel):
 def col_md5(dirname):
     count = 0
     dirname = os.path.expanduser(dirname)
-    for path in FileUtils.file_iter(dirname):
+    for path in walkfile(dirname):
         _id = md5(path)
         print(_id, path)
         count += 1

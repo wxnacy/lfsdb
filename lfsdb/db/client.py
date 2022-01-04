@@ -8,8 +8,9 @@
 import os
 import shutil
 from datetime import datetime
-from wpy.files import FileUtils
-from wpy.files import ZipUtils
+from wpy.path import (
+    read_dict, write_dict, zip as _zip, unzip
+)
 from .base import BaseTable
 from lfsdb.common.loggers import get_logger
 
@@ -83,7 +84,7 @@ class FileDB(FileStorage):
         path = os.path.join(dump_root, 'lfsdb_{}_{}_dump'.format(self.db,
             datetime.now().strftime("%Y%m%d%H%M%S")))
         print('备份地址:', path)
-        ZipUtils.zip(self.db_root, path)
+        _zip(self.db_root, path)
 
     def store(self, dump_path=None):
         """恢复备份
@@ -112,7 +113,7 @@ class FileDB(FileStorage):
             return
         print('使用备份文件:', dump_path)
 
-        ZipUtils.unzip(dump_path, self.root)
+        unzip(dump_path, self.root)
 
     def _get_last_dump_name(self, dump_root):
         """获取最后一个备份名"""
@@ -138,7 +139,7 @@ class FileTable(BaseTable):
         _id = doc['_id']
         doc_path = os.path.join(self.table_root, _id)
         # 写入文件
-        FileUtils.write_dict(doc_path, doc)
+        write_dict(doc_path, doc)
         return True
 
     def drop(self):
@@ -154,7 +155,7 @@ class FileTable(BaseTable):
 
     def _update(self, doc):
         _id = doc.get("_id")
-        FileUtils.write_dict(self._generage_path(_id), doc)
+        write_dict(self._generage_path(_id), doc)
         return True
 
 
@@ -167,7 +168,7 @@ class FileTable(BaseTable):
     def _read_by_id(self, _id):
         """使用 _id 读取数据"""
         try:
-            return FileUtils.read_dict(self._generage_path(_id))
+            return read_dict(self._generage_path(_id))
         except Exception as e:
             return None
 

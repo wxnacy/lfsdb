@@ -72,6 +72,10 @@ class FSModel(object):
         return item
 
     @classmethod
+    def find_one_by_id(cls, _id, db_col=None):
+        return cls.find_by_id(_id, db_col)
+
+    @classmethod
     def find_by_id(cls, _id, db_col=None):
         if not db_col:
             db_col = {}

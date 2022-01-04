@@ -8,8 +8,10 @@
 import pytest
 import os
 
-from wpy.files import FileUtils
-from wpy import RandomUtils
+from wpy.path import read_dict
+from wpy.randoms import (
+         random_str
+        )
 
 from lfsdb import FileStorage
 from lfsdb.db import FileStorageError
@@ -48,7 +50,7 @@ def test_insert():
     _handle_table_test(_test_insert)
 
 def _test_insert(db):
-    name = RandomUtils.random_str(6)
+    name = random_str(6)
     doc = {
         "name": name
     }
@@ -56,7 +58,7 @@ def _test_insert(db):
     _id = db.insert(doc)
     if isinstance(db, FileTable):
         path = os.path.join(table_root, _id)
-        data = FileUtils.read_dict(path)
+        data = read_dict(path)
         data = _origin_data(data)
         assert doc == data
 
@@ -77,7 +79,7 @@ def test_find():
     _handle_table_test(_test_find)
 
 def _test_find(db):
-    name = RandomUtils.random_str(6)
+    name = random_str(6)
     doc = { "name": name}
     db.drop()
     db.insert(doc)
@@ -116,7 +118,7 @@ def test_update():
 
 def _test_update(db):
     # TODO 缓存
-    name = RandomUtils.random_str(6)
+    name = random_str(6)
     doc = { "name": name}
     db.insert(doc)
     _id = db.insert(doc)
@@ -143,7 +145,7 @@ def test_delete():
 
 def _test_delete(db):
     db.drop()
-    name = RandomUtils.random_str(6)
+    name = random_str(6)
     doc = { "name": name}
     db.insert(doc)
     _id = db.insert(doc)
